@@ -29,32 +29,21 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	starts[0] = 0; starts[1] = subsize-1;
 	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_FLOAT, &Send[RIGHT]);
 
-
 	// Create Receive Buffers
 	int i, z;
 	float* Rec[4];
-	float DiagSendTable[2][2];
-	float DiagRecvTable[2][2];
 	float** handler;
 	float** B = SeqAllocate(subsize);
-	
 	MPI_Request ReqSend[2][4];
 	MPI_Request ReqRecv[4];
-	MPI_Request DiagReq[2][2];
 	for (i = 0; i < 4; i++)
 	{
 		MPI_Type_commit(&Send[i]);
 		Rec[i] = calloc(subsize, sizeof(float));
-		MPI_Send_init(A[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[0][i]);
-		MPI_Send_init(B[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[1][i]);
+		MPI_Send_init(&A[0][0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[0][i]);
+		MPI_Send_init(&B[0][0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[1][i]);
 		MPI_Recv_init(Rec[i], subsize, MPI_FLOAT, nbrs[i], TAG, cartcomm, &ReqRecv[i]);
 	}
-	
-	MPI_Send_init(DiagSendTable[UP], 2, MPI_FLOAT, nbrs[UP], DIAGS, cartcomm, &DiagReq[SEND][UP]);
-	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_FLOAT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[SEND][DOWN]);
-
-	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_FLOAT, nbrs[UP], DIAGS, cartcomm, &DiagReq[RECV][UP]);
-	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_FLOAT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
 
 	MPI_Wait(request, MPI_STATUS_IGNORE);
 
@@ -66,35 +55,20 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		z = i%2;
 
 		// Send and receive neighbors
-		MPI_Startall(4, ReqRecv);
 		MPI_Startall(4, ReqSend[z]);
-		MPI_Startall(2, DiagReq[RECV]);
+		MPI_Startall(4, ReqRecv);
 
 		// Calculate inside data
 		Independent_Update(A, B, subsize);
 
-		// wait to receive Left and Right
-		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE); 
-
-		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
-		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
-		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
-
-		//Send Diagonals 
-		MPI_Startall(2, DiagReq[SEND]);
-
-		// wait to receive Up and Down
-		MPI_Waitall(2, ReqRecv, MPI_STATUSES_IGNORE); 
+		// Wait to receive neighbors
+		MPI_Waitall(4, ReqRecv, MPI_STATUSES_IGNORE);
 
 		// Calculate neighbors
 		Dependent_Update(A, B, subsize, Rec);
 
-		// Wait to receive diagonals
-		MPI_Waitall(2, DiagReq[RECV], MPI_STATUSES_IGNORE); // diag
-		
-		UpdateDiag();
-			
+		// Wait to send neighbors
+		MPI_Waitall(4, ReqSend[z], MPI_STATUSES_IGNORE);
 
 		// Reduce
 #ifdef __CON__
@@ -116,12 +90,6 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		handler = A;
 		A = B;
 		B = handler;
-
-		// Wait to send neighbors
-		MPI_Waitall(4, ReqSend[z], MPI_STATUSES_IGNORE);
-
-		// Wait to send diagonals
-		MPI_Waitall(2, DiagReq[SEND], MPI_STATUSES_IGNORE);
 	}
 	//printf("%d\n", i);
 
@@ -136,13 +104,6 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		MPI_Type_free(&Send[i]);
 		free(Rec[i]);
 	}
-
-	//diag free
-
-	MPI_Request_free(DiagSendTable[UP]);
-	MPI_Request_free(DiagSendTable[DOWN]);
-	MPI_Request_free(DiagRecvTable[UP]);
-	MPI_Request_free(DiagRecvTable[DOWN]);
 
 	// Free arrays
 	SeqFree(B);

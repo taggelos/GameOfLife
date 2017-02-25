@@ -77,7 +77,6 @@ void Dependent_Update(float** A, float** B, int size, float** Row)
 	}
 }
 
-
 inline float diffa(float** A, float** B, int size)
 {
 	float diff, sum = 0;

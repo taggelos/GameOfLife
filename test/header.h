@@ -13,11 +13,10 @@
 #define MAXTHREADS 150 /* maximum number of threads */
 #define ERROR 0
 
+
 #define BEGIN 5 /* message tag */
 #define TAG 6 /* message tag */
-#define DIAGS 7 /* message tag */
-#define DONE 8 /* message tag */
-
+#define DONE 7 /* message tag */
 #define MASTER 0 /* taskid of first process */
 
 // Neighbors
@@ -25,11 +24,10 @@
 #define DOWN 1
 #define LEFT 2
 #define RIGHT 3
-#define DIADLEFT 0
-#define DIAGRIGHT 1
-#define SEND 0
-#define RECV 1
-
+#define UPLEFT 4
+#define DOWNLEFT 5
+#define UPRIGHT 6
+#define DOWNRIGHT 7
 
 struct Parms
 {

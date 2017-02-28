@@ -6,10 +6,11 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define GENERATION 600000
+#define GENERATION 1
 #define REDUCE 10  /* reduce every REDUCE */
 #define CONVERGENCE NPROB*NPROB*0.000001*0.000001 /* Break generation if succeed CONVERGENCE */
-#define NPROB 425 /* dimension of problem grid */
+//#define NPROB 425 /* dimension of problem grid */
+#define NPROB 20 /* dimension of problem grid */
 #define MAXTHREADS 150 /* maximum number of threads */
 #define ERROR 0
 
@@ -33,27 +34,27 @@
 
 struct Parms
 {
-	float cx;
-	float cy;
+	int cx;
+	int cy;
 };
 
 typedef struct
 {
-	float** A;
+	int** A;
 	MPI_Request* request;
 } Finalize;
 
 //extern struct Parms parms;
 
-inline void prtdat(int nx, float** u, char* fnam);
-inline void inidat(int nx, float** u);
-inline void Independent_Update(float**, float**, int);
-inline void Dependent_Update(float**, float**, int, float**);
+inline void prtdat(int nx, int** u, char* fnam);
+inline void inidat(int nx, int** u);
+inline void Independent_Update(int**, int**, int);
+inline void Dependent_Update(int**, int**, int, int**);
 inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid);
 inline void master(int* nbrs, MPI_Comm cartcomm, int numworkers, int n, int subsize);
-inline float** SeqAllocate(int);
-inline void SeqFree(float**);
+inline int** SeqAllocate(int);
+inline void SeqFree(int**);
 inline void finalize(Finalize* fin);
-inline float diffa(float** A, float** B, int size_of_matrix);
+inline int diffa(int** A, int** B, int size_of_matrix);
 
 #endif

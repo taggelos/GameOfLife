@@ -2,7 +2,7 @@
 
 inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsize)
 {
-	float** u = SeqAllocate(NPROB); /* array for grid */
+	int** u = SeqAllocate(NPROB); /* array for grid */
 
 	printf("Starting mpi_heat2D with %d worker tasks.\n", numtasks);
 
@@ -18,6 +18,7 @@ inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsiz
 	int subsizes[2] = {subsize,subsize};
 	int bigsizes[2] = {NPROB, NPROB};
 	MPI_Datatype* grid = malloc(numtasks*sizeof(MPI_Datatype));
+	puts("AXNEEEEEEEEEEEEEEEEEEEEEEE11111...");
 	for (i=0; i<numtasks; i++)
 	{
 		MPI_Cart_coords(cartcomm, i, 2, starts);
@@ -26,7 +27,7 @@ inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsiz
 		MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &grid[i]);
 		MPI_Type_commit(&grid[i]);
 	}
-
+	puts("AXNEEEEEEEEEEEEEEEEEEEEEE222222221...");
 	// Send to workers
 	MPI_Request* reqs = malloc(2*numtasks*sizeof(MPI_Request));
 	double time = MPI_Wtime();
@@ -34,7 +35,7 @@ inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsiz
 	{
 		MPI_Isend(&u[0][0], 1, grid[i], i, BEGIN, cartcomm, &reqs[i]);
 	}
-
+	puts("AXNEEEEEEEEEEEEEEEEEEEEEEE3333333333...");
 	Finalize* fin = worker(nbrs, cartcomm, subsize, MASTER);
 
 	// Receive from worker

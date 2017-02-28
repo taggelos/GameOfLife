@@ -32,7 +32,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 
 	// Create Receive Buffers
 	int i, z;
-
+	puts("CREATEEEEEEEEEEEEEEEEEE3333333...");
 	int* Rec[4];
 	int DiagSendTable[2][2];
 	int DiagRecvTable[2][2];
@@ -58,12 +58,14 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
 
 	MPI_Wait(request, MPI_STATUS_IGNORE);
-
+	
+	puts("LOOOOOOOOOP...");
 	// Calculate its subarray
 	int sum;
 	for(i = 0; i<GENERATION; i++)
-	{
-		if (taskid==MASTER && i%(GENERATION/100)==0) printf("%3.2f%%\n", 100.0*i/GENERATION);
+	{	
+		//puts("???...");
+		//if (taskid==MASTER && i%(GENERATION/100)==0) printf("%3.2f%%\n", 100.0*i/GENERATION);
 		z = i%2;
 
 		// Send and receive neighbors
@@ -107,7 +109,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 			// solution good enough ?
 			if (sum < CONVERGENCE)
 			{
-				printf("%d %f\n", i, sum);
+				printf("%d %d\n", i, sum);
 				break;
 			}
 		}
@@ -128,7 +130,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 
 	// Send to master
 	MPI_Isend(&A[0][0], subsize*subsize, MPI_INT, MASTER, DONE, cartcomm, request);
-
+	puts("DORAAAAAAAAAAAAAAAAAAAAAAAAAA...");
 	for (i = 0; i < 4; i++)
 	{
 		MPI_Request_free(&ReqRecv[i]);
@@ -139,14 +141,19 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	}
 
 	//diag free
+	puts("KEFTESSSS...");
+	MPI_Request_free(&DiagReq[SEND][UP]);
+	puts("KEDEFTESSSS...");
+	MPI_Request_free(&DiagReq[SEND][DOWN]);
+	puts("ketela...");
+	MPI_Request_free(&DiagReq[RECV][UP]);
+	puts("ketela...");
+	MPI_Request_free(&DiagReq[RECV][DOWN]);
 
-	MPI_Request_free(DiagSendTable[UP]);
-	MPI_Request_free(DiagSendTable[DOWN]);
-	MPI_Request_free(DiagRecvTable[UP]);
-	MPI_Request_free(DiagRecvTable[DOWN]);
-
+	puts("ketela...");
 	// Free arrays
 	SeqFree(B);
+
 	Finalize* fin = malloc(sizeof(Finalize));
 	fin->request = request;
 	fin->A = A;

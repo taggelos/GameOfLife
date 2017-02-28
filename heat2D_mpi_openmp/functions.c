@@ -6,7 +6,7 @@ struct Parms parms = {0.1, 0.1};
 /**************************************************************************
 * subroutine update
 ****************************************************************************/
-void Independent_Update(float** A, float** B, int size)
+void Independent_Update(int** A, int** B, int size)
 {
 	int i, j;
 #ifdef __OMP__
@@ -19,17 +19,30 @@ void Independent_Update(float** A, float** B, int size)
 	{
 		for (j = 1; j < size-1; j++)
 		{
-			B[i][j] = A[i][j] + 
-				parms.cx * ( A[i + 1][j] + A[i-1][j] - 2.0 * A[i][j] ) + 
-				parms.cy * ( A[i][j + 1] + A[i][j-1] - 2.0 * A[i][j] );
+			int sum = A[i+1][j] + A[i][j+1] + A[i-1][j] + A[i][j-1] + A[i-1][j-1] + A[i-1][j+1] + A[i+1][j-1] +A[i+1][j+1];
+			if(A[i][j]==1){
+				if(sum <=1)
+					B[i][j]=0;
+				else if (sum<=3)
+					B[i][j]=1;
+				else
+					B[i][j]=0;
+				
+			}
+			else{
+				if(sum == 3)
+					B[i][j]=1;
+				else
+					B[i][j]=0;
+			}
 		}
 	}
 }
 
-void Dependent_Update(float** A, float** B, int size, float** Row)
+void Dependent_Update(int** A, int** B, int size, int** Row)
 {
 	int i, j;
-	float T1, T2;
+	int T1, T2;
 #ifdef __OMP__
 	int thread_count = (size < MAXTHREADS) ? size : MAXTHREADS;
 	// Create size threads with openmp or max
@@ -45,9 +58,9 @@ void Dependent_Update(float** A, float** B, int size, float** Row)
 			{
 				T1 = (i != size-1) ? A[size-1][i + 1] : Row[RIGHT][size-1];   // If you are at the right edge of neighbor take data from East
 				T2 = (i != 0) ? A[size-1][i-1] : Row[LEFT][size-1];
-				B[size-1][i] = A[size-1][i] + 								  // Calculate formula
-					parms.cx * ( Row[DOWN][i] + A[size-2][i] - 2.0 * A[size-1][i] ) + 
-					parms.cy * ( T1 + T2 - 2.0 * A[size-1][i] );
+				
+				B[size-1][i] = A[size-1][i] ; 								  // Calculate formula
+					
 			}
 			else if(j == 1) // North Neighbor
 			{
@@ -78,9 +91,9 @@ void Dependent_Update(float** A, float** B, int size, float** Row)
 }
 
 
-inline float diffa(float** A, float** B, int size)
+inline int diffa(int** A, int** B, int size)
 {
-	float diff, sum = 0;
+	int diff, sum = 0;
 	int i, j;
 #ifdef __OMP__
 	int thread_count = (size < MAXTHREADS) ? size : MAXTHREADS;
@@ -101,7 +114,7 @@ inline float diffa(float** A, float** B, int size)
 /*****************************************************************************
 * subroutine inidat   - Initialize Array
 *****************************************************************************/
-inline void inidat(int size, float** u)
+inline void inidat(int size, int** u)
 {
 	int ix, iy;
 
@@ -117,7 +130,7 @@ inline void inidat(int size, float** u)
 /**************************************************************************
 * subroutine prtdat - Print the results
 **************************************************************************/
-inline void prtdat(int size, float** u, char *fnam)
+inline void prtdat(int size, int** u, char *fnam)
 {
 	int ix, iy;
 	FILE *fp;
@@ -134,9 +147,9 @@ inline void prtdat(int size, float** u, char *fnam)
 }
 
 // Create 2D array with sequential memory positions
-inline float** SeqAllocate(int size) {
-	float* sequence = malloc(size*size*sizeof(float));
-	float** matrix = malloc(size*sizeof(float *));
+inline int** SeqAllocate(int size) {
+	int* sequence = malloc(size*size*sizeof(int));
+	int** matrix = malloc(size*sizeof(int *));
 	int i;
 	for (i = 0; i < size; i++)
 		matrix[i] = &(sequence[i*size]);
@@ -145,7 +158,7 @@ inline float** SeqAllocate(int size) {
 }
 
 // Free 2D array with sequential memory positions
-inline void SeqFree(float** memory_ptr)
+inline void SeqFree(int** memory_ptr)
 {
 	memory_ptr[0][2] = -3;
 	free(memory_ptr[0]);

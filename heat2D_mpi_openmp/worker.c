@@ -3,11 +3,11 @@
 inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 {
 	// Allocate A array with sequally
-	float** A = SeqAllocate(subsize);
+	int** A = SeqAllocate(subsize);
 
 	// Receive from master
 	MPI_Request* request = malloc(sizeof(MPI_Request));
-	MPI_Irecv(&A[0][0], subsize*subsize, MPI_FLOAT, MASTER, BEGIN, cartcomm, request);
+	MPI_Irecv(&A[0][0], subsize*subsize, MPI_INT, MASTER, BEGIN, cartcomm, request);
 
 	// Create DataTypes
 	MPI_Datatype Send[4];
@@ -18,25 +18,26 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 
 	starts[0] = subsize-1; starts[1] = 0;
 	subsizes[0] = 1; subsizes[1] = subsize;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_FLOAT, &Send[DOWN]);
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[DOWN]);
 
 	starts[0] = 0; starts[1] = 0;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_FLOAT, &Send[UP]);
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[UP]);
 
 	subsizes[0] = subsize; subsizes[1] = 1;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_FLOAT, &Send[LEFT]);
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[LEFT]);
 
 	starts[0] = 0; starts[1] = subsize-1;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_FLOAT, &Send[RIGHT]);
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[RIGHT]);
 
 
 	// Create Receive Buffers
 	int i, z;
-	float* Rec[4];
-	float DiagSendTable[2][2];
-	float DiagRecvTable[2][2];
-	float** handler;
-	float** B = SeqAllocate(subsize);
+
+	int* Rec[4];
+	int DiagSendTable[2][2];
+	int DiagRecvTable[2][2];
+	int** handler;
+	int** B = SeqAllocate(subsize);
 	
 	MPI_Request ReqSend[2][4];
 	MPI_Request ReqRecv[4];
@@ -44,22 +45,22 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	for (i = 0; i < 4; i++)
 	{
 		MPI_Type_commit(&Send[i]);
-		Rec[i] = calloc(subsize, sizeof(float));
+		Rec[i] = calloc(subsize, sizeof(int));
 		MPI_Send_init(A[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[0][i]);
 		MPI_Send_init(B[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[1][i]);
-		MPI_Recv_init(Rec[i], subsize, MPI_FLOAT, nbrs[i], TAG, cartcomm, &ReqRecv[i]);
+		MPI_Recv_init(Rec[i], subsize, MPI_INT, nbrs[i], TAG, cartcomm, &ReqRecv[i]);
 	}
 	
-	MPI_Send_init(DiagSendTable[UP], 2, MPI_FLOAT, nbrs[UP], DIAGS, cartcomm, &DiagReq[SEND][UP]);
-	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_FLOAT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[SEND][DOWN]);
+	MPI_Send_init(DiagSendTable[UP], 2, MPI_INT, nbrs[UP], DIAGS, cartcomm, &DiagReq[SEND][UP]);
+	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_INT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[SEND][DOWN]);
 
-	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_FLOAT, nbrs[UP], DIAGS, cartcomm, &DiagReq[RECV][UP]);
-	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_FLOAT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
+	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_INT, nbrs[UP], DIAGS, cartcomm, &DiagReq[RECV][UP]);
+	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
 
 	MPI_Wait(request, MPI_STATUS_IGNORE);
 
 	// Calculate its subarray
-	float sum;
+	int sum;
 	for(i = 0; i<GENERATION; i++)
 	{
 		if (taskid==MASTER && i%(GENERATION/100)==0) printf("%3.2f%%\n", 100.0*i/GENERATION);
@@ -102,7 +103,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		{
 			sum = diffa(A, B, subsize);
 			// compute global residual
-			MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_FLOAT, MPI_SUM, cartcomm);
+			MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_INT, MPI_SUM, cartcomm);
 			// solution good enough ?
 			if (sum < CONVERGENCE)
 			{
@@ -126,7 +127,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	//printf("%d\n", i);
 
 	// Send to master
-	MPI_Isend(&A[0][0], subsize*subsize, MPI_FLOAT, MASTER, DONE, cartcomm, request);
+	MPI_Isend(&A[0][0], subsize*subsize, MPI_INT, MASTER, DONE, cartcomm, request);
 
 	for (i = 0; i < 4; i++)
 	{

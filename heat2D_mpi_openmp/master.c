@@ -23,7 +23,7 @@ inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsiz
 		MPI_Cart_coords(cartcomm, i, 2, starts);
 		starts[0] *= subsize;
 		starts[1] *= subsize;
-		MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_FLOAT, &grid[i]);
+		MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &grid[i]);
 		MPI_Type_commit(&grid[i]);
 	}
 

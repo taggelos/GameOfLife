@@ -103,8 +103,24 @@ void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row)
 	#pragma omp parallel for num_threads( thread_count ) private(T1) private(T2) collapse(2)
 #endif
 
-	sum = A[0][1]+A[1][0]+A[1][1]+Row[LEFT][0]+Row[LEFT][1]+Row[UP][0]+Row[UP][1]+DiagRecvTable[UP][DIAGLEFT];
+	//Upper Left
+	sum = A[0][1] + A[1][0] + A[1][1] + Row[LEFT][0] + Row[LEFT][1] + Row[UP][0] + Row[UP][1] + DiagRecvTable[UP][DIAGLEFT];
 	B[0][0]=Populate(0,0,sum,A);
+
+	//Upper Right
+	sum = A[1][size-1] + A[0][size-2] + A[1][size-2] + Row[RIGHT][0] + Row[RIGHT][1] + Row[UP][size-1] + Row[UP][size-2] + DiagRecvTable[UP][DIAGRIGHT];
+	B[0][size-1]=Populate(0,size-1,sum,A);
+
+	//Uppercut
+
+	//Bottom Left
+	sum = A[size-1][1] + A[size-2][0] + A[size-2][1] + Row[LEFT][size-1] + Row[LEFT][size-2] + Row[DOWN][0] + Row[DOWN][1] + DiagRecvTable[DOWN][DIAGLEFT];
+	B[size-1][0]=Populate(size-1,0,sum,A);
+
+	//Bottom Right
+	sum = A[size-2][size-1] + A[size-1][size-2] + A[size-2][size-2] + Row[RIGHT][size-1] + Row[RIGHT][size-2] + Row[DOWN][size-1] + Row[DOWN][size-2] + DiagRecvTable[DOWN][DIAGRIGHT];
+	B[size-1][size-1]=Populate(size-1,size-1,sum,A);
+
 	
 }
 

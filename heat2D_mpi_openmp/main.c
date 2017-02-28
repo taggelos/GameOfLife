@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 
 	// Create Cartesian Topology
 	int dims[2] = {n,n};
-	int periods[2] = {0,0};
+	int periods[2] = {1,1};
 	MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &cartcomm);
 	MPI_Comm_rank(cartcomm, &taskid);
 	MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UP], &nbrs[DOWN]);

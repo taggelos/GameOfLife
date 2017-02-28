@@ -27,6 +27,15 @@ inline int Populate(int i, int j, int sum, int** A ){
 	return res;
 }
 
+inline int Populate( int sum, int A ){
+
+	return sum==3 || (A && sum==2);
+
+	/*if(A==1)
+		return sum==2 || sum==3;
+	return sum == 3;
+	return (A==1 ) ? sum==2 || sum==3 : sum == 3;*/
+}
 
 void Independent_Update(int** A, int** B, int size)
 {
@@ -96,34 +105,47 @@ void Dependent_Update(int** A, int** B, int size, int** Row)
 void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row)
 {
 	int i, j, sum;
+	puts("ooooooooo...");
 
 #ifdef __OMP__
 	int thread_count = (size < MAXTHREADS) ? size : MAXTHREADS;
 	// Create size threads with openmp or max
 	#pragma omp parallel for num_threads( thread_count ) 
 #endif
-
+	
 	for (j = 0; j < 4; j++)
 	{
 		if (j == 0) {
 			//Upper Left
+			puts("ooooooooo1...");
 			sum = A[0][1] + A[1][0] + A[1][1] + Row[LEFT][0] + Row[LEFT][1] + Row[UP][0] + Row[UP][1] + DiagRecvTable[UP][DIAGLEFT];
+			puts("ooooooooo1.5...");
 			B[0][0]=Populate(0,0,sum,A);
+			puts("ooooooooo1...");
+			
 		}
 		else if (j == 1){
 			//Upper Right
+			puts("ooooooooo2...");
 			sum = A[1][size-1] + A[0][size-2] + A[1][size-2] + Row[RIGHT][0] + Row[RIGHT][1] + Row[UP][size-1] + Row[UP][size-2] + DiagRecvTable[UP][DIAGRIGHT];
 			B[0][size-1]=Populate(0,size-1,sum,A);
+			puts("ooooooooo2...");
+			
 		}
 		else if (j == 2){
 			//Bottom Left
+			puts("ooooooooo3...");
 			sum = A[size-1][1] + A[size-2][0] + A[size-2][1] + Row[LEFT][size-1] + Row[LEFT][size-2] + Row[DOWN][0] + Row[DOWN][1] + DiagRecvTable[DOWN][DIAGLEFT];
 			B[size-1][0]=Populate(size-1,0,sum,A);
+			puts("ooooooooo3...");
+			
 		}
 		else {
 			//Bottom Right
+			puts("ooooooooo4...");
 			sum = A[size-2][size-1] + A[size-1][size-2] + A[size-2][size-2] + Row[RIGHT][size-1] + Row[RIGHT][size-2] + Row[DOWN][size-1] + Row[DOWN][size-2] + DiagRecvTable[DOWN][DIAGRIGHT];
 			B[size-1][size-1]=Populate(size-1,size-1,sum,A);
+			
 		}		
 	}	
 }

@@ -67,12 +67,12 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		//puts("???...");
 		//if (taskid==MASTER && i%(GENERATION/100)==0) printf("%3.2f%%\n", 100.0*i/GENERATION);
 		z = i%2;
-
+		puts("???...");
 		// Send and receive neighbors
 		MPI_Startall(4, ReqRecv);
 		MPI_Startall(4, ReqSend[z]);
 		MPI_Startall(2, DiagReq[RECV]);
-
+		puts("sadsdasdas...");
 		// Calculate inside data
 		Independent_Update(A, B, subsize);
 
@@ -83,21 +83,21 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
 		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
 		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
-
+		puts("44444444444444...");
 		//Send Diagonals 
 		MPI_Startall(2, DiagReq[SEND]);
 
 		// wait to receive Up and Down
 		MPI_Waitall(2, ReqRecv, MPI_STATUSES_IGNORE); 
-
+		puts("555555555...");
 		// Calculate neighbors
 		Dependent_Update(A, B, subsize, Rec);
 
 		// Wait to receive diagonals
 		MPI_Waitall(2, DiagReq[RECV], MPI_STATUSES_IGNORE); // diag
-		
+		puts("7777777777...");
 		UpdateDiag(A ,B, subsize , DiagRecvTable , Rec);
-			
+		puts("88888888888...");
 
 		// Reduce
 #ifdef __CON__

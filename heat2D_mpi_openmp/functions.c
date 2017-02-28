@@ -6,6 +6,28 @@ struct Parms parms = {0.1, 0.1};
 /**************************************************************************
 * subroutine update
 ****************************************************************************/
+
+inline void Populate(int i, int j, int sum, int** A ){
+	int res;
+	if(A[i][j]==1){
+		if(sum <=1)
+			res=0;
+		else if (sum<=3)
+			res=1;
+		else
+			res=0;
+		
+	}
+	else{
+		if(sum == 3)
+			res=1;
+		else
+			res=0;
+	}	
+	return res;
+}
+
+
 void Independent_Update(int** A, int** B, int size)
 {
 	int i, j;
@@ -20,28 +42,15 @@ void Independent_Update(int** A, int** B, int size)
 		for (j = 1; j < size-1; j++)
 		{
 			int sum = A[i+1][j] + A[i][j+1] + A[i-1][j] + A[i][j-1] + A[i-1][j-1] + A[i-1][j+1] + A[i+1][j-1] +A[i+1][j+1];
-			if(A[i][j]==1){
-				if(sum <=1)
-					B[i][j]=0;
-				else if (sum<=3)
-					B[i][j]=1;
-				else
-					B[i][j]=0;
-				
-			}
-			else{
-				if(sum == 3)
-					B[i][j]=1;
-				else
-					B[i][j]=0;
-			}
+			
+			B[i][j] = Populate(i,j,sum,A);
 		}
 	}
 }
 
 void Dependent_Update(int** A, int** B, int* size, int** Row)
 {
-	int i, j;
+	int i, j, sum;
 	int T1, T2, Τ3 , Τ4;
 #ifdef __OMP__
 	int thread_count = (size < MAXTHREADS) ? size : MAXTHREADS;
@@ -56,12 +65,17 @@ void Dependent_Update(int** A, int** B, int* size, int** Row)
 		{
 			if (j == 0)	// South Neighbor. Same format for the below if statement
 			{
-				int sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[DOWN][i] + A[size-2][i-1] + A[size-2][i+1] + Row[DOWN][i-1] +Row[DOWN][i+1];  
+				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[DOWN][i] + A[size-2][i-1] + A[size-2][i+1] + Row[DOWN][i-1] +Row[DOWN][i+1];  
 				B[size-1][i] = A[size-1][i] ; 								  // Calculate formula
-					
+
+				B[i][j] = Populate(i+1,j,sum,A);
+									
 			}
 			else if(j == 1) // North Neighbor
 			{
+				
+				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[UP][i] + A[size-2][i-1] + A[size-2][i+1] + Row[UP][i-1] +Row[UP][i+1];
+
 				T1 = (i != size-1) ? A[0][i + 1] : Row[RIGHT][0];
 				T2 = (i != 0) ? A[0][i-1] : Row[LEFT][0];
 				B[0][i] = A[0][i] + 
@@ -70,6 +84,9 @@ void Dependent_Update(int** A, int** B, int* size, int** Row)
 			}
 			else if(j == 2) // West Neighbor
 			{
+
+				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[LEFT][i] + A[size-2][i-1] + A[size-2][i+1] + Row[LEFT][i-1] +Row[LEFT][i+1];
+
 				T1 = (i != size-1) ? A[i + 1][0] : Row[DOWN][0];
 				T2 = (i != 0) ? A[i-1][0] : Row[UP][0];
 				B[i][0] = A[i][0] + 
@@ -78,6 +95,8 @@ void Dependent_Update(int** A, int** B, int* size, int** Row)
 			}
 			else	// East Neighbor
 			{
+				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[RIGHT][i] + A[size-2][i-1] + A[size-2][i+1] + Row[RIGHT][i-1] +Row[RIGHT][i+1];
+
 				T1 = (i != size-1) ? A[i + 1][size-1] : Row[DOWN][size-1];
 				T2 = (i != 0) ? A[i-1][size-1] : Row[UP][size-1];
 				B[i][size-1] = A[i][size-1] + 

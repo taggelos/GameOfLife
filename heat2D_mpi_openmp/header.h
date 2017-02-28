@@ -25,7 +25,7 @@
 #define DOWN 1
 #define LEFT 2
 #define RIGHT 3
-#define DIADLEFT 0
+#define DIAGLEFT 0
 #define DIAGRIGHT 1
 #define SEND 0
 #define RECV 1

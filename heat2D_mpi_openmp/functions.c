@@ -7,7 +7,7 @@ struct Parms parms = {0.1, 0.1};
 * subroutine update
 ****************************************************************************/
 
-inline void Populate(int i, int j, int sum, int** A ){
+inline int Populate(int i, int j, int sum, int** A ){
 	int res;
 	if(A[i][j]==1){
 		if(sum <=1)
@@ -48,7 +48,7 @@ void Independent_Update(int** A, int** B, int size)
 	}
 }
 
-void Dependent_Update(int** A, int** B, int* size, int** Row)
+void Dependent_Update(int** A, int** B, int size, int** Row)
 {
 	int i, j, sum;
 	int T1, T2, Τ3 , Τ4;
@@ -66,47 +66,47 @@ void Dependent_Update(int** A, int** B, int* size, int** Row)
 			if (j == 0)	// South Neighbor. Same format for the below if statement
 			{
 				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[DOWN][i] + A[size-2][i-1] + A[size-2][i+1] + Row[DOWN][i-1] +Row[DOWN][i+1];  
-				B[size-1][i] = A[size-1][i] ; 								  // Calculate formula
-
-				B[i][j] = Populate(i+1,j,sum,A);
+				B[size-1][i] = Populate(size-1,i,sum,A);
 									
 			}
 			else if(j == 1) // North Neighbor
 			{
 				
-				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[UP][i] + A[size-2][i-1] + A[size-2][i+1] + Row[UP][i-1] +Row[UP][i+1];
+				sum = A[0][i+1] + A[0][i-1] + A[1][i] + Row[UP][i] + A[1][i-1] + A[1][i+1] + Row[UP][i+1] +Row[UP][i-1];
 
-				T1 = (i != size-1) ? A[0][i + 1] : Row[RIGHT][0];
-				T2 = (i != 0) ? A[0][i-1] : Row[LEFT][0];
-				B[0][i] = A[0][i] + 
-					parms.cx * ( A[1][i] + Row[UP][i] - 2.0 * A[0][i] ) + 
-					parms.cy * ( T1 + T2 - 2.0 * A[0][i] );
+				B[0][i] = Populate(0,i,sum,A);
 			}
 			else if(j == 2) // West Neighbor
 			{
 
-				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[LEFT][i] + A[size-2][i-1] + A[size-2][i+1] + Row[LEFT][i-1] +Row[LEFT][i+1];
-
-				T1 = (i != size-1) ? A[i + 1][0] : Row[DOWN][0];
-				T2 = (i != 0) ? A[i-1][0] : Row[UP][0];
-				B[i][0] = A[i][0] + 
-					parms.cx * ( T1 + T2 - 2.0 * A[i][0] ) + 
-					parms.cy * ( A[i][1] + Row[LEFT][i] - 2.0 * A[i][0] );
+				sum = A[i][1] + A[i-1][0] + A[i+1][0] + Row[LEFT][i] + A[i+1][1] + A[i-1][1] + Row[LEFT][i+1] + Row[LEFT][i-1];
+				
+				B[i][0] = Populate(i,0,sum,A);
 			}
 			else	// East Neighbor
 			{
-				sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[RIGHT][i] + A[size-2][i-1] + A[size-2][i+1] + Row[RIGHT][i-1] +Row[RIGHT][i+1];
+				sum = A[i][size-2] + A[i-1][size-1] + A[i+1][size-1] + Row[RIGHT][i] + A[i-1][size-2] + A[i+1][size-2] + Row[RIGHT][i+1] + Row[RIGHT][i-1];
 
-				T1 = (i != size-1) ? A[i + 1][size-1] : Row[DOWN][size-1];
-				T2 = (i != 0) ? A[i-1][size-1] : Row[UP][size-1];
-				B[i][size-1] = A[i][size-1] + 
-					parms.cx * ( T1 + T2 - 2.0 * A[i][size-1] ) + 
-					parms.cy * ( Row[RIGHT][i] + A[i][size-2] - 2.0 * A[i][size-1] );
+				B[i][size-1] = Populate(i,size-1,sum,A);
 			}
 		}
 	}
 }
 
+void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row)
+{
+	int i, j, sum;
+	int T1, T2, Τ3 , Τ4;
+#ifdef __OMP__
+	int thread_count = (size < MAXTHREADS) ? size : MAXTHREADS;
+	// Create size threads with openmp or max
+	#pragma omp parallel for num_threads( thread_count ) private(T1) private(T2) collapse(2)
+#endif
+
+	sum = A[0][1]+A[1][0]+A[1][1]+Row[LEFT][0]+Row[LEFT][1]+Row[UP][0]+Row[UP][1]+DiagRecvTable[UP][DIAGLEFT];
+	B[0][0]=Populate(0,0,sum,A);
+	
+}
 
 inline int diffa(int** A, int** B, int size)
 {

@@ -94,7 +94,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		// Wait to receive diagonals
 		MPI_Waitall(2, DiagReq[RECV], MPI_STATUSES_IGNORE); // diag
 		
-		UpdateDiag();
+		UpdateDiag(A ,B, subsize , DiagRecvTable , Rec);
 			
 
 		// Reduce

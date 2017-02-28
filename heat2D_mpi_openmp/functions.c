@@ -39,10 +39,10 @@ void Independent_Update(int** A, int** B, int size)
 	}
 }
 
-void Dependent_Update(int** A, int** B, int size, int** Row)
+void Dependent_Update(int** A, int** B, int* size, int** Row)
 {
 	int i, j;
-	int T1, T2;
+	int T1, T2, Τ3 , Τ4;
 #ifdef __OMP__
 	int thread_count = (size < MAXTHREADS) ? size : MAXTHREADS;
 	// Create size threads with openmp or max
@@ -50,15 +50,13 @@ void Dependent_Update(int** A, int** B, int size, int** Row)
 #endif
 	// Calculate the edges of array
 	// 2 for instructions for better split to threads
-	for (i = 0; i < size; i++)
+	for (i = 1; i < size-1; i++)
 	{
 		for (j = 0; j < 4; j++)
 		{
 			if (j == 0)	// South Neighbor. Same format for the below if statement
 			{
-				T1 = (i != size-1) ? A[size-1][i + 1] : Row[RIGHT][size-1];   // If you are at the right edge of neighbor take data from East
-				T2 = (i != 0) ? A[size-1][i-1] : Row[LEFT][size-1];
-				
+				int sum = A[size-1][i+1] + A[size-1][i-1] + A[size-2][i] + Row[DOWN][i] + A[size-2][i-1] + A[size-2][i+1] + Row[DOWN][i-1] +Row[DOWN][i+1];  
 				B[size-1][i] = A[size-1][i] ; 								  // Calculate formula
 					
 			}

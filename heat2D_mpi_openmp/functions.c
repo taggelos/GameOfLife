@@ -27,11 +27,10 @@ inline int Populate(int i, int j, int sum, int** A ){
 	return res;
 }
 
-/*inline int Populate( int sum, int A ){
-	if(A==1)
-		return sum==2 || sum==3;
-	return sum == 3;
-}*/
+#define Populate(i, j, sum, a) muahaha(sum, a[i][j])
+inline int muahaha(int sum, int A) {
+	return (sum == 3) || (A == 1 && sum == 2);
+}
 
 void Independent_Update(int** A, int** B, int size)
 {

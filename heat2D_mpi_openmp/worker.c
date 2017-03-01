@@ -35,10 +35,18 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	puts("CREATEEEEEEEEEEEEEEEEEE3333333...");
 	int* Rec[4];
 	int DiagSendTable[2][2];
-	int DiagRecvTable[2][2];
+	int **DiagRecvTable;
 	int** handler;
 	int** B = SeqAllocate(subsize);
 	
+	DiagRecvTable = calloc(2, sizeof(int*));
+	DiagRecvTable[0] = malloc(2*sizeof(int));
+	DiagRecvTable[1] = malloc(2*sizeof(int));
+	int antegeia,antegeia2;
+		for (antegeia=0;antegeia<2;antegeia++)
+			for (antegeia2=0;antegeia2<2;antegeia2++)
+				DiagRecvTable[antegeia][antegeia2] = -1;
+
 	MPI_Request ReqSend[2][4];
 	MPI_Request ReqRecv[4];
 	MPI_Request DiagReq[2][2];
@@ -79,6 +87,7 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		// wait to receive Left and Right
 		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE); 
 
+
 		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
 		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
 		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
@@ -92,13 +101,24 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		puts("555555555...");
 		// Calculate neighbors
 		Dependent_Update(A, B, subsize, Rec);
+		for (antegeia=0;antegeia<4;antegeia++)
+		{
+			for (antegeia2=0;antegeia2<subsize;antegeia2++)
+				printf("%d ",Rec[antegeia][antegeia2]);
+			printf("\n");
+		}
 
+				
 		// Wait to receive diagonals
 		MPI_Waitall(2, DiagReq[RECV], MPI_STATUSES_IGNORE); // diag
 		puts("7777777777...");
+
+		for (antegeia=0;antegeia<2;antegeia++)
+			for (antegeia2=0;antegeia2<2;antegeia2++)
+				printf("---> %d \n",DiagRecvTable[antegeia][antegeia2]);
+		
 		UpdateDiag(A ,B, subsize , DiagRecvTable , Rec);
 		puts("88888888888...");
-
 		// Reduce
 #ifdef __CON__
 		if (i%REDUCE == 0)

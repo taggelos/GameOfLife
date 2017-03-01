@@ -10,7 +10,7 @@
 #define REDUCE 10  /* reduce every REDUCE */
 #define CONVERGENCE NPROB*NPROB*0.000001*0.000001 /* Break generation if succeed CONVERGENCE */
 //#define NPROB 425 /* dimension of problem grid */
-#define NPROB 5 /* dimension of problem grid */
+#define NPROB 3 /* dimension of problem grid */
 #define MAXTHREADS 150 /* maximum number of threads */
 #define ERROR 0
 
@@ -50,6 +50,7 @@ inline void prtdat(int nx, int** u, char* fnam);
 inline void inidat(int nx, int** u);
 inline void Independent_Update(int**, int**, int);
 inline void Dependent_Update(int**, int**, int, int**);
+void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row);
 inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid);
 inline void master(int* nbrs, MPI_Comm cartcomm, int numworkers, int n, int subsize);
 inline int** SeqAllocate(int);

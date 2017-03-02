@@ -56,7 +56,7 @@ int main(int argc , char* argv[])
 			left = (j != 0) ? j-1 : size-1;
 			right = (j != size) ? j+1 : 0;
 
-			sum = A[down][j] + A[up][j] + A[i][left] + A[i][right] + A[down][left] + A[up][left] + A[down][right] + A[down][left] ;
+			sum = A[down][j] + A[up][j] + A[i][left] + A[i][right] + A[down][left] + A[up][left] + A[down][right] + A[up][right] ;
 
 			cout << muahaha(sum,A[i][j]) << " ";
 			

@@ -57,7 +57,8 @@ int main(int argc, char *argv[])
 	MPI_Cart_shift(cartcomm, 1, 1, &nbrs[LEFT], &nbrs[RIGHT]);
 	//MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UPLEFT], &nbrs[DOWNLEFT]);
 	//MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UPRIGHT], &nbrs[DOWNRIGHT]);
-	
+	if (taskid == MASTER) puts("task\tUP\tDOWN\tLEFT\tRIGHT");
+	printf("%d\t%d\t%d\t%d\t%d\n", taskid, nbrs[UP], nbrs[DOWN], nbrs[LEFT], nbrs[RIGHT]);
 
 
 	if (taskid == MASTER)

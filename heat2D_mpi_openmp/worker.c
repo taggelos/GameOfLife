@@ -18,28 +18,27 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 
 	starts[0] = subsize-1; starts[1] = 0;
 	subsizes[0] = 1; subsizes[1] = subsize;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[DOWN]);
-
-	starts[0] = 0; starts[1] = 0;
 	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[UP]);
 
+	starts[0] = 0; starts[1] = 0;
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[DOWN]);
+
 	subsizes[0] = subsize; subsizes[1] = 1;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[LEFT]);
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[RIGHT]);
 
 	starts[0] = 0; starts[1] = subsize-1;
-	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[RIGHT]);
+	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[LEFT]);
 
 
 	// Create Receive Buffers
 	int i, z;
-	puts("CREATEEEEEEEEEEEEEEEEEE3333333...");
 	int* Rec[4];
 	int DiagSendTable[2][2];
 	int **DiagRecvTable;
 	int** handler;
 	int** B = SeqAllocate(subsize);
 	
-	DiagRecvTable = calloc(2, sizeof(int*));
+	DiagRecvTable = malloc(2*sizeof(int*));
 	DiagRecvTable[0] = malloc(2*sizeof(int));
 	DiagRecvTable[1] = malloc(2*sizeof(int));
 	int antegeia,antegeia2;
@@ -54,16 +53,16 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	{
 		MPI_Type_commit(&Send[i]);
 		Rec[i] = calloc(subsize, sizeof(int));
-		MPI_Send_init(A[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[0][i]);
-		MPI_Send_init(B[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[1][i]);
-		MPI_Recv_init(Rec[i], subsize, MPI_INT, nbrs[i], TAG, cartcomm, &ReqRecv[i]);
+		MPI_Send_init(A[0], 1, Send[i], nbrs[i], TAG+i, cartcomm, &ReqSend[0][i]);
+		MPI_Send_init(B[0], 1, Send[i], nbrs[i], TAG+i, cartcomm, &ReqSend[1][i]);
+		MPI_Recv_init(Rec[i], subsize, MPI_INT, nbrs[i], TAG+i, cartcomm, &ReqRecv[i]);
 	}
 	
-	MPI_Send_init(DiagSendTable[UP], 2, MPI_INT, nbrs[UP], DIAGS, cartcomm, &DiagReq[SEND][UP]);
-	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_INT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[SEND][DOWN]);
+	MPI_Send_init(DiagSendTable[UP], 2, MPI_INT, nbrs[UP], UDIAGS, cartcomm, &DiagReq[SEND][UP]);
+	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_INT, nbrs[UP], UDIAGS, cartcomm, &DiagReq[RECV][UP]);
 
-	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_INT, nbrs[UP], DIAGS, cartcomm, &DiagReq[RECV][UP]);
-	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, nbrs[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
+	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_INT, nbrs[DOWN], DDIAGS, cartcomm, &DiagReq[SEND][DOWN]);
+	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, nbrs[DOWN], DDIAGS, cartcomm, &DiagReq[RECV][DOWN]);
 
 	MPI_Wait(request, MPI_STATUS_IGNORE);
 	
@@ -85,40 +84,49 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		Independent_Update(A, B, subsize);
 
 		// wait to receive Left and Right
-		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE); 
-
+		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE);
 
 		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
 		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
 		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
 		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
-		puts("44444444444444...");
+
+		
+		puts("UR\tUL\tDR\tDL");
+		printf("%d\t%d\t%d\t%d\n", DiagSendTable[UP][DIAGRIGHT],DiagSendTable[UP][DIAGLEFT],DiagSendTable[DOWN][DIAGRIGHT],DiagSendTable[DOWN][DIAGLEFT]);
+
 		//Send Diagonals 
 		MPI_Startall(2, DiagReq[SEND]);
 
 		// wait to receive Up and Down
 		MPI_Waitall(2, ReqRecv, MPI_STATUSES_IGNORE); 
-		puts("555555555...");
 		// Calculate neighbors
 		Dependent_Update(A, B, subsize, Rec);
-		for (antegeia=0;antegeia<4;antegeia++)
-		{
-			for (antegeia2=0;antegeia2<subsize;antegeia2++)
-				printf("%d ",Rec[antegeia][antegeia2]);
-			printf("\n");
-		}
 
+
+		if (taskid == MASTER) {
+			int zz;
+			puts("RIGHT");
+			for (zz = 0; zz < subsize; ++zz)
+				printf("%d\n", Rec[RIGHT][zz]);
+			puts("LEFT");
+			for (zz = 0; zz < subsize; ++zz)
+				printf("%d\n", Rec[LEFT][zz]);
+			//int zz;
+			puts("UP");
+			for (zz = 0; zz < subsize; ++zz)
+				printf("%d\n", Rec[UP][zz]);
+			puts("DOWN");
+			for (zz = 0; zz < subsize; ++zz)
+				printf("%d\n", Rec[DOWN][zz]);
+		}
 				
 		// Wait to receive diagonals
 		MPI_Waitall(2, DiagReq[RECV], MPI_STATUSES_IGNORE); // diag
-		puts("7777777777...");
-
-		for (antegeia=0;antegeia<2;antegeia++)
-			for (antegeia2=0;antegeia2<2;antegeia2++)
-				printf("---> %d \n",DiagRecvTable[antegeia][antegeia2]);
+		
 		
 		UpdateDiag(A ,B, subsize , DiagRecvTable , Rec);
-		puts("88888888888...");
+		
 		// Reduce
 #ifdef __CON__
 		if (i%REDUCE == 0)

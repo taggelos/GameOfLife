@@ -10,14 +10,15 @@
 #define REDUCE 10  /* reduce every REDUCE */
 #define CONVERGENCE NPROB*NPROB*0.000001*0.000001 /* Break generation if succeed CONVERGENCE */
 //#define NPROB 425 /* dimension of problem grid */
-#define NPROB 3 /* dimension of problem grid */
+#define NPROB 16 /* dimension of problem grid */
 #define MAXTHREADS 150 /* maximum number of threads */
 #define ERROR 0
 
 #define BEGIN 5 /* message tag */
-#define TAG 6 /* message tag */
-#define DIAGS 7 /* message tag */
-#define DONE 8 /* message tag */
+#define TAG 10 /* message tag */
+#define UDIAGS 7 /* message tag */
+#define DDIAGS 8 /* message tag */
+#define DONE 9 /* message tag */
 
 #define MASTER 0 /* taskid of first process */
 

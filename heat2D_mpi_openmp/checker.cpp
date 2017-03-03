@@ -49,15 +49,29 @@ int main(int argc , char* argv[])
 	{
 		for(int j = 0; j < size ; j++)
 		{
-			
+			if(j==size-1)
+			cout << A[i][j];
+			else
+			cout << A[i][j] << " ";
+		}
+		cout << endl;
+	}
+
+	cout << endl;cout << endl;
+	for(int i = 0; i < size ; i++)
+	{
+		for(int j = 0; j < size ; j++)
+		{
 			int sum=0;
 			down = (i != size-1) ? i+1 : 0;
 			up = (i != 0) ? i-1 : size-1;
 			left = (j != 0) ? j-1 : size-1;
-			right = (j != size) ? j+1 : 0;
+			right = (j != size-1) ? j+1 : 0;
 
 			sum = A[down][j] + A[up][j] + A[i][left] + A[i][right] + A[down][left] + A[up][left] + A[down][right] + A[up][right] ;
-
+			if(j==size-1)
+			cout << muahaha(sum,A[i][j]);
+			else
 			cout << muahaha(sum,A[i][j]) << " ";
 			
 		}

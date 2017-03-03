@@ -86,10 +86,18 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		// wait to receive Left and Right
 		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE);
 
-		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
+		/*DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
 		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
 		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
+		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];*/
+
+		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][0];
+		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][0];
+		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][subsize-1];
+		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][subsize-1];
+
+
+
 
 		
 		puts("UR\tUL\tDR\tDL");
@@ -124,7 +132,9 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		// Wait to receive diagonals
 		MPI_Waitall(2, DiagReq[RECV], MPI_STATUSES_IGNORE); // diag
 		
-		
+		puts("UR\tUL\tDR\tDL");
+		printf("%d\t%d\t%d\t%d\n", DiagRecvTable[UP][DIAGRIGHT],DiagRecvTable[UP][DIAGLEFT],DiagRecvTable[DOWN][DIAGRIGHT],DiagRecvTable[DOWN][DIAGLEFT]);
+
 		UpdateDiag(A ,B, subsize , DiagRecvTable , Rec);
 		
 		// Reduce

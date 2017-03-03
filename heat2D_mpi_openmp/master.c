@@ -11,10 +11,10 @@ inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsiz
 	printf("Initializing grid and writing initial.dat file...\n");
 	inidat(NPROB, u);
 	/* REMOVE */
-	int z,zz;
-	for (z = 0; z<NPROB; z++)
-	for (zz = 0; zz<NPROB; zz++)
-	u[z][zz]=z*NPROB+zz;
+	//int z,zz;
+	//for (z = 0; z<NPROB; z++)
+	//for (zz = 0; zz<NPROB; zz++)
+	//u[z][zz]=z*NPROB+zz;
 	/**/
 	prtdat(NPROB, u, "initial.dat");
 

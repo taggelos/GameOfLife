@@ -1,6 +1,6 @@
 #include "header.h"
 
-inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
+inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid, int n)
 {
 	// Allocate A array with sequally
 	int** A = SeqAllocate(subsize);
@@ -53,16 +53,16 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 	{
 		MPI_Type_commit(&Send[i]);
 		Rec[i] = calloc(subsize, sizeof(int));
-		MPI_Send_init(A[0], 1, Send[i], nbrs[i], TAG+i, cartcomm, &ReqSend[0][i]);
-		MPI_Send_init(B[0], 1, Send[i], nbrs[i], TAG+i, cartcomm, &ReqSend[1][i]);
-		MPI_Recv_init(Rec[i], subsize, MPI_INT, nbrs[i], TAG+i, cartcomm, &ReqRecv[i]);
+		MPI_Send_init(A[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[0][i]);
+		MPI_Send_init(B[0], 1, Send[i], nbrs[i], TAG, cartcomm, &ReqSend[1][i]);
+		MPI_Recv_init(Rec[i], subsize, MPI_INT, nbrs[i], TAG, cartcomm, &ReqRecv[i]);
 	}
 	
 	MPI_Send_init(DiagSendTable[UP], 2, MPI_INT, nbrs[UP], UDIAGS, cartcomm, &DiagReq[SEND][UP]);
 	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_INT, nbrs[UP], UDIAGS, cartcomm, &DiagReq[RECV][UP]);
 
-	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_INT, nbrs[DOWN], DDIAGS, cartcomm, &DiagReq[SEND][DOWN]);
-	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, nbrs[DOWN], DDIAGS, cartcomm, &DiagReq[RECV][DOWN]);
+	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_INT, nbrs[DOWN], UDIAGS, cartcomm, &DiagReq[SEND][DOWN]);
+	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, nbrs[DOWN], UDIAGS, cartcomm, &DiagReq[RECV][DOWN]);
 
 	MPI_Wait(request, MPI_STATUS_IGNORE);
 	
@@ -86,15 +86,37 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid)
 		// wait to receive Left and Right
 		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE);
 
-		/*DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
-		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
-		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];*/
+		int coords[2] ;
+		MPI_Cart_coords( cartcomm,taskid,2,coords); 
 
-		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][0];
-		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][0];
-		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][subsize-1];
+		/*if((coords[0]== 0 || coords[0]==n-1) && (coords[1]== 0 || coords[1]==n-1)){ //gwnia
+			DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][0];
+			DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][0];
+			DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][subsize-1];
+			DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][subsize-1];
+		}*/
+		 if ((coords[0]== 0 || coords[0]==n-1)   ) {  				//panw katw
+			DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][0];
+			DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][0];
+			DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][subsize-1];
+			DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][subsize-1];
+		}
+		/*else if ((coords[1]== 0 || coords[1]==n-1)   ) { 				//deksia aristera
+			DiagSendTable[UP][DIAGRIGHT] = Rec[LEFT][0];
+			DiagSendTable[UP][DIAGLEFT] = Rec[RIGHT][0];
+			DiagSendTable[DOWN][DIAGRIGHT] = Rec[LEFT][subsize-1];
+			DiagSendTable[DOWN][DIAGLEFT] = Rec[RIGHT][subsize-1];
+		}*/
+
+		else{
+			DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
+			DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
+			DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
+			DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
+		}
+		
+
+		
 
 
 

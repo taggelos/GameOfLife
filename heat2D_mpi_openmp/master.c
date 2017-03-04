@@ -42,7 +42,7 @@ inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsiz
 		MPI_Isend(&u[0][0], 1, grid[i], i, BEGIN, cartcomm, &reqs[i]);
 	}
 	puts("AXNEEEEEEEEEEEEEEEEEEEEEEE3333333333...");
-	Finalize* fin = worker(nbrs, cartcomm, subsize, MASTER);
+	Finalize* fin = worker(nbrs, cartcomm, subsize, MASTER, n);
 
 	// Receive from worker
 	for (i=0; i<numtasks; i++)

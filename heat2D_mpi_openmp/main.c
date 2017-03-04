@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		Finalize* fin = worker(nbrs, cartcomm, subsize, taskid);
+		Finalize* fin = worker(nbrs, cartcomm, subsize, taskid, n);
 		finalize(fin);
 	}
 

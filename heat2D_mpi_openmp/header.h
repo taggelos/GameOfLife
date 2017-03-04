@@ -9,8 +9,8 @@
 #define GENERATION 1
 #define REDUCE 10  /* reduce every REDUCE */
 #define CONVERGENCE NPROB*NPROB*0.000001*0.000001 /* Break generation if succeed CONVERGENCE */
-//#define NPROB 425 /* dimension of problem grid */
-#define NPROB 36 /* dimension of problem grid */
+#define NPROB 425 /* dimension of problem grid */
+//#define NPROB 36 /* dimension of problem grid */
 #define MAXTHREADS 150 /* maximum number of threads */
 #define ERROR 0
 

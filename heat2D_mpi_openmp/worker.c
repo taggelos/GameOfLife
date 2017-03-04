@@ -16,19 +16,19 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid, i
 	int subsizes[2];
 	int bigsizes[2] = {subsize,subsize};
 
-	starts[0] = subsize-1; starts[1] = 0;
+	starts[0] = 0; starts[1] = 0;
 	subsizes[0] = 1; subsizes[1] = subsize;
 	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[UP]);
 
-	starts[0] = 0; starts[1] = 0;
+	starts[0] = subsize-1; starts[1] = 0;
 	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[DOWN]);
 
 	subsizes[0] = subsize; subsizes[1] = 1;
+	starts[0] = 0; starts[1] = subsize-1;
 	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[RIGHT]);
 
-	starts[0] = 0; starts[1] = subsize-1;
+	starts[0] = 0; starts[1] = 0;
 	MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &Send[LEFT]);
-
 
 	// Create Receive Buffers
 	int i, z;
@@ -88,35 +88,12 @@ inline Finalize* worker(int* nbrs, MPI_Comm cartcomm, int subsize, int taskid, i
 
 		int coords[2] ;
 		MPI_Cart_coords( cartcomm,taskid,2,coords); 
-
-		/*if((coords[0]== 0 || coords[0]==n-1) && (coords[1]== 0 || coords[1]==n-1)){ //gwnia
-			DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][0];
-			DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][0];
-			DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-			DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][subsize-1];
-		}*/
-		 if ((coords[0]== 0 || coords[0]==n-1)   ) {  				//panw katw
-			DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][0];
-			DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][0];
-			DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-			DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][subsize-1];
-		}
-		/*else if ((coords[1]== 0 || coords[1]==n-1)   ) { 				//deksia aristera
-			DiagSendTable[UP][DIAGRIGHT] = Rec[LEFT][0];
-			DiagSendTable[UP][DIAGLEFT] = Rec[RIGHT][0];
-			DiagSendTable[DOWN][DIAGRIGHT] = Rec[LEFT][subsize-1];
-			DiagSendTable[DOWN][DIAGLEFT] = Rec[RIGHT][subsize-1];
-		}*/
-
-		else{
-			DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
-			DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
-			DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
-			DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
-		}
 		
 
-		
+		DiagSendTable[UP][DIAGRIGHT] = Rec[RIGHT][0];
+		DiagSendTable[UP][DIAGLEFT] = Rec[LEFT][0];
+		DiagSendTable[DOWN][DIAGRIGHT] = Rec[RIGHT][subsize-1];
+		DiagSendTable[DOWN][DIAGLEFT] = Rec[LEFT][subsize-1];
 
 
 

@@ -8,28 +8,8 @@ struct Parms parms = {0.1, 0.1};
 ****************************************************************************/
 
 inline int Populate(int i, int j, int sum, int** A ){
-	int res;
-	if(A[i][j]==1){
-		if(sum <=1)
-			res=0;
-		else if (sum<=3)
-			res=1;
-		else
-			res=0;
-		
-	}
-	else{
-		if(sum == 3)
-			res=1;
-		else
-			res=0;
-	}	
-	return res;
-}
-
-#define Populate(i, j, sum, a) muahaha(sum, a[i][j])
-inline int muahaha(int sum, int A) {
-	return (sum == 3) || (A == 1 && sum == 2);
+	
+	return (sum == 3) || (A[i][j] == 1 && sum == 2);
 }
 
 void Independent_Update(int** A, int** B, int size)

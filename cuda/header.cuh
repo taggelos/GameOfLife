@@ -7,17 +7,10 @@
 #define NPROB 17 /* dimension of problem grid */
 #define BLOCK_SIZE 1*32 /* size of threads should be multiple of warp's size(32) */
 
-struct Parms
-{
-	float cx;
-	float cy;
-};
 
-extern struct Parms parms;
-
-void inidat(int , float** );
-void prtdat(int , float** , char* );
-float** SeqAllocate(int);
-void SeqFree(float**);
-float** cudaSeqAllocate(int );
-void cudaSeqFree(float**);
+void inidat(int , bool** );
+void prtdat(int , bool** , char* );
+bool** SeqAllocate(int);
+void SeqFree(bool**);
+bool** cudaSeqAllocate(int );
+void cudaSeqFree(bool**);

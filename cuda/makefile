@@ -1,3 +1,7 @@
+life_game_cuda: life_game_cuda.cu
+	nvcc $^ -o $@	-arch=sm_20	
+ 
+clean:
+	\rm -f life_game_cuda	
 
-heat_cuda:
-	nvcc -arch=sm_20 -o heat_cuda main.cu functions.cu
+rebuild: clean life_game_cuda

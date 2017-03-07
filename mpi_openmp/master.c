@@ -1,71 +1,77 @@
 #include "header.h"
 
-inline void master(int* nbrs, MPI_Comm cartcomm, int numtasks, int n, int subsize)
+inline void master(int* neighbors, MPI_Comm cartcomm, int ntasks, int n, int subsize)
 {
-	int** u = SeqAllocate(NPROB); /* array for grid */
+	int** arr = SeqAllocate(NPROB); // array for grid 
 
-	printf("Starting mpi_heat2D with %d worker tasks.\n", numtasks);
+	printf("Starting mpi_life with %d worker tasks.\n", ntasks);
 
-	/* Initialize grid */
 	printf("Grid size: %d Time steps= %d\n", NPROB, GENERATION);
-	printf("Initializing grid and writing initial.dat file...\n");
-	inidat(NPROB, u);
-	/* REMOVE */
-	//int z,zz;
-	//for (z = 0; z<NPROB; z++)
-	//for (zz = 0; zz<NPROB; zz++)
-	//u[z][zz]=z*NPROB+zz;
-	/**/
-	prtdat(NPROB, u, "initial.dat");
+	printf("Initializing grid and writing in initial.dat  \n");
+	inidat(NPROB, arr);
+	
+
+	prtdat(NPROB, arr, "initial.dat");
 
 	// Take neighbors of workers
+
 	int i;
-	int starts[2];
+	int start[2];
 	int subsizes[2] = {subsize,subsize};
-	int bigsizes[2] = {NPROB, NPROB};
-	MPI_Datatype* grid = malloc(numtasks*sizeof(MPI_Datatype));
-	puts("AXNEEEEEEEEEEEEEEEEEEEEEEE11111...");
-	for (i=0; i<numtasks; i++)
+	int gridsizes[2] = {NPROB, NPROB};
+
+	MPI_Datatype* grid = malloc(ntasks*sizeof(MPI_Datatype));
+	
+	//Create subarrays
+
+	for (i=0; i<ntasks; i++)
 	{
-		MPI_Cart_coords(cartcomm, i, 2, starts);
-		starts[0] *= subsize;
-		starts[1] *= subsize;
-		MPI_Type_create_subarray(2, bigsizes, subsizes, starts, MPI_ORDER_C, MPI_INT, &grid[i]);
+		MPI_Cart_coords(cartcomm, i, 2, start);
+		start[0] *= subsize;
+		start[1] *= subsize;
+		MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_INT, &grid[i]);
 		MPI_Type_commit(&grid[i]);
 	}
-	puts("AXNEEEEEEEEEEEEEEEEEEEEEE222222221...");
+	
 	// Send to workers
-	MPI_Request* reqs = malloc(2*numtasks*sizeof(MPI_Request));
+
+	MPI_Request* reqs = malloc(2*ntasks*sizeof(MPI_Request));
 	double time = MPI_Wtime();
-	for (i=0; i<numtasks; i++)
+	
+	for (i=0; i<ntasks; i++)
 	{
-		MPI_Isend(&u[0][0], 1, grid[i], i, BEGIN, cartcomm, &reqs[i]);
+		MPI_Isend(&arr[0][0], 1, grid[i], i, BEGIN, cartcomm, &reqs[i]);
 	}
-	puts("AXNEEEEEEEEEEEEEEEEEEEEEEE3333333333...");
-	Finalize* fin = worker(nbrs, cartcomm, subsize, MASTER, n);
+	
+	// Finalize
+	
+	Finalize* fin = worker(neighbors, cartcomm, subsize, MASTER, n);
 
 	// Receive from worker
-	for (i=0; i<numtasks; i++)
+
+	for (i=0; i<ntasks; i++)
 	{
-		MPI_Irecv(&u[0][0], 1, grid[i], i, DONE, cartcomm, &reqs[i+numtasks]);
+		MPI_Irecv(&arr[0][0], 1, grid[i], i, DONE, cartcomm, &reqs[i+ntasks]);
 	}
 
 	// Wait all workers
-	MPI_Waitall(2*numtasks, reqs, MPI_STATUSES_IGNORE);
+
+	MPI_Waitall(2*ntasks, reqs, MPI_STATUSES_IGNORE);
+	
 	time = MPI_Wtime() - time;
 
 	finalize(fin);
 
-	/* Write final output, call X graph and finalize MPI */
+	
 	printf("Finished after %f seconds\n", time);
-	printf("Writing final.dat file \n");
-	prtdat(NPROB, u, "final.dat");
+	printf("Writing in final.dat \n");
+	prtdat(NPROB, arr, "final.dat");
 
-	// Free structures
-	for (i=0; i<numtasks; i++)
+	// Frees
+	for (i=0; i<ntasks; i++)
 	{
 		MPI_Type_free(&grid[i]);
 	}
 	free(grid);
-	SeqFree(u);
+	SeqFree(arr);
 }

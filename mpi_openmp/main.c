@@ -2,19 +2,21 @@
 
 int main(int argc, char *argv[])
 {
-	int numtasks, taskid;
-	int nbrs[4];
+	int ntasks, taskid;
+	int neighbors[4];
 
 	MPI_Request reqs[8];
-	MPI_Comm cartcomm; // required variable
+	MPI_Comm cartcomm; 
 
 	// Initialize MPI
+
 	MPI_Init(&argc, &argv);
-	MPI_Comm_size(MPI_COMM_WORLD, &numtasks);
+	MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
 	MPI_Comm_rank(MPI_COMM_WORLD, &taskid);
 
-	// Check number of proccess from user input
-	switch (numtasks)
+	// Check user input
+
+	switch (ntasks)
 	{
 		case 1:
 		case 4:
@@ -26,48 +28,37 @@ int main(int argc, char *argv[])
 			break;
 		default:
 			if (taskid == MASTER)
-			{
-				puts("ERROR: the number of workers must be between 1 and 49 and must be a square number.");
-				puts("Quitting...");
-			}
+				puts("!!! Choose a square number of workers between 1 and 49 !!!");
 			MPI_Abort(MPI_COMM_WORLD, ERROR);
 			exit(1);
 	}
 
-	int n = sqrt(numtasks);
+	int n = sqrt(ntasks);
 	int subsize = NPROB/n;
 
-	if (NPROB%n != 0)
+	if (NPROB % n != 0)
 	{
 		if (taskid == MASTER)
-		{
-			puts("ERROR: square root of number of workers must be multiple of NPROB");
-			puts("Quitting...");
-		}
+			puts("!!! Choose a square number of workers multiple of NPROB !!!");
+		
 		MPI_Abort(MPI_COMM_WORLD, ERROR);
 		exit(1);
 	}
 
-	// Create Cartesian Topology
-	int dims[2] = {n,n};
+	int dimensions[2] = {n,n};
 	int periods[2] = {1,1};
-	MPI_Cart_create(MPI_COMM_WORLD, 2, dims, periods, 1, &cartcomm);
+	MPI_Cart_create(MPI_COMM_WORLD, 2, dimensions, periods, 1, &cartcomm); // Create Cartesian Topology
 	MPI_Comm_rank(cartcomm, &taskid);
-	MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UP], &nbrs[DOWN]);
-	MPI_Cart_shift(cartcomm, 1, 1, &nbrs[LEFT], &nbrs[RIGHT]);
-	//MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UPLEFT], &nbrs[DOWNLEFT]);
-	//MPI_Cart_shift(cartcomm, 0, 1, &nbrs[UPRIGHT], &nbrs[DOWNRIGHT]);
-	if (taskid == MASTER) puts("task\tUP\tDOWN\tLEFT\tRIGHT");
-	printf("%d\t%d\t%d\t%d\t%d\n", taskid, nbrs[UP], nbrs[DOWN], nbrs[LEFT], nbrs[RIGHT]);
-
+	MPI_Cart_shift(cartcomm, 0, 1, &neighbors[UP], &neighbors[DOWN]);
+	MPI_Cart_shift(cartcomm, 1, 1, &neighbors[LEFT], &neighbors[RIGHT]);
 
 	if (taskid == MASTER)
 	{
-		master(nbrs, cartcomm, numtasks, n, subsize);
+		master(neighbors, cartcomm, ntasks, n, subsize);
 	}
 	else
 	{
-		Finalize* fin = worker(nbrs, cartcomm, subsize, taskid, n);
+		Finalize* fin = worker(neighbors, cartcomm, subsize, taskid, n);
 		finalize(fin);
 	}
 

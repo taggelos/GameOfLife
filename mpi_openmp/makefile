@@ -1,16 +1,16 @@
 all: mpi omp mpi_con omp_con clean
 
 mpi: worker master main functions_mpi
-	mpicc -o heat_mpi worker.o master.o functions_mpi.o main.o -lm
+	mpicc -o life_mpi worker.o master.o functions_mpi.o main.o -lm
 
 omp: worker master main functions_omp
-	mpicc -o heat_omp worker.o master.o functions_omp.o main.o -lm -fopenmp
+	mpicc -o life_omp worker.o master.o functions_omp.o main.o -lm -fopenmp
 
 mpi_con: worker_con master main functions_mpi
-	mpicc -o heat_mpi_con worker_con.o master.o functions_mpi.o main.o -lm
+	mpicc -o life_mpi_con worker_con.o master.o functions_mpi.o main.o -lm
 
 omp_con: worker_con master main functions_omp
-	mpicc -o heat_omp_con worker_con.o master.o functions_omp.o main.o -lm -fopenmp
+	mpicc -o life_omp_con worker_con.o master.o functions_omp.o main.o -lm -fopenmp
 
 worker:
 	mpicc -o worker.o -c worker.c

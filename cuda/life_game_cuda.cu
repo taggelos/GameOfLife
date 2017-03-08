@@ -3,9 +3,9 @@
 #include <sys/time.h>
 #include <math.h>
 
-#define NPROB      64     /* size of problem grid */
-#define GENERATION       1
-#define BLOCK_SIZE 64 /* size of threads should be multiple of warp's size(32) */
+#define NPROB 425     		// size of problem grid 
+#define GENERATION 1        // generations number
+#define THREAD_NUMBER 1024 	// size of threads should be multiple of warp's size(32)
 
 /*****************************************************************************
 * subroutine inidat - Initialize Array
@@ -104,9 +104,6 @@ int main(int argc,char *argv[])
 	prtdat(NPROB, h_A, "initial.dat");
 	cudaMemcpy(d_B,h_A,NPROB*NPROB*sizeof(bool),cudaMemcpyHostToDevice);
 	cudaMemcpy(d_A,h_A,NPROB*NPROB*sizeof(bool),cudaMemcpyHostToDevice);	
-	 
-	dim3 NumberOfThreads(NPROB);			
-	dim3 NumberOfBlocks(NPROB);	
 	
 	bool* handler;
 	
@@ -117,7 +114,7 @@ int main(int argc,char *argv[])
 	{
 		/* swapping between the two arrays */
        	
-		Update<<<NumberOfBlocks,NumberOfThreads>>>(d_A,d_B);	
+		Update<<<NPROB*NPROB/THREAD_NUMBER+1,THREAD_NUMBER>>>(d_A,d_B);	
 
 		cudaThreadSynchronize();
 

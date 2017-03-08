@@ -6,7 +6,7 @@ inline void master(int* neighbors, MPI_Comm cartcomm, int ntasks, int n, int sub
 
 	printf("Starting mpi_life with %d worker tasks.\n", ntasks);
 
-	printf("Grid size: %d Time steps= %d\n", NPROB, GENERATION);
+	printf("Grid size: %d Generations: %d\n", NPROB, GENERATION);
 	printf("Initializing grid and writing in initial.dat  \n");
 	inidat(NPROB, arr);
 	

@@ -2,7 +2,7 @@
 
 inline void master(int* neighbors, MPI_Comm cartcomm, int ntasks, int n, int subsize)
 {
-	int** arr = SeqAllocate(NPROB); // array for grid 
+	char** arr = SeqAllocate(NPROB); // array for grid 
 
 	printf("Starting mpi_life with %d worker tasks.\n", ntasks);
 
@@ -29,7 +29,7 @@ inline void master(int* neighbors, MPI_Comm cartcomm, int ntasks, int n, int sub
 		MPI_Cart_coords(cartcomm, i, 2, start);
 		start[0] *= subsize;
 		start[1] *= subsize;
-		MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_INT, &grid[i]);
+		MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_CHAR, &grid[i]);
 		MPI_Type_commit(&grid[i]);
 	}
 	

@@ -6,10 +6,10 @@
 #include <stdlib.h>
 #include <math.h>
 
-#define GENERATION 1
+#define GENERATION 1000
 
 //Dimension of problem grid 
-#define NPROB 425 
+#define NPROB 3600
 
 //Maximum number of threads
 #define MAXTHREADS 150  
@@ -43,20 +43,20 @@
 
 typedef struct
 {
-	int** A;
+	char** A;
 	MPI_Request* request;
 } Finalize;
 
-inline void prtdat(int nx, int** u, char* fnam);
-inline void inidat(int nx, int** u);
-inline void Independent_Update(int**, int**, int);
-inline void Dependent_Update(int**, int**, int, int**);
-void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row);
+inline void prtdat(int nx, char** u, char* fnam);
+inline void inidat(int nx, char** u);
+inline void Independent_Update(char**, char**, int);
+inline void Dependent_Update(char**, char**, int, char**);
+void UpdateDiag(char** A, char** B, int size, char** DiagRecvTable , char** Row);
 inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int taskid, int n);
 inline void master(int* neighbors, MPI_Comm cartcomm, int numworkers, int n, int subsize);
-inline int** SeqAllocate(int);
-inline void SeqFree(int**);
+inline char** SeqAllocate(int);
+inline void SeqFree(char**);
 inline void finalize(Finalize* fin);
-inline int diffa(int** A, int** B, int size_of_matrix);
+inline int diffa(char** A, char** B, int size_of_matrix);
 
 #endif

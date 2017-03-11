@@ -4,12 +4,12 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 {
 	// Allocate A array with sequally
 
-	int** A = SeqAllocate(subsize);
+	char** A = SeqAllocate(subsize);
 
 	// Receive from master
 
 	MPI_Request* request = malloc(sizeof(MPI_Request));
-	MPI_Irecv(&A[0][0], subsize*subsize, MPI_INT, MASTER, BEGIN, cartcomm, request);
+	MPI_Irecv(&A[0][0], subsize*subsize, MPI_CHAR, MASTER, BEGIN, cartcomm, request);
 
 	// Create DataTypes for avoidance of multiple copies
 
@@ -23,30 +23,30 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 
 	start[0] = 0; start[1] = 0;
 	subsizes[0] = 1; subsizes[1] = subsize;
-	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_INT, &Send[UP]);
+	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_CHAR, &Send[UP]);
 
 	start[0] = subsize-1; 
-	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_INT, &Send[DOWN]);
+	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_CHAR, &Send[DOWN]);
 
 	subsizes[0] = subsize; subsizes[1] = 1;
 	start[0] = 0; start[1] = subsize-1;
-	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_INT, &Send[RIGHT]);
+	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_CHAR, &Send[RIGHT]);
 
 	start[1] = 0;
-	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_INT, &Send[LEFT]);
+	MPI_Type_create_subarray(2, gridsizes, subsizes, start, MPI_ORDER_C, MPI_CHAR, &Send[LEFT]);
 
 	// Create Receive and Send Buffers 
 
 	int i, z;
-	int* Recv[4];
-	int DiagSendTable[2][2];
-	int **DiagRecvTable;
-	int** handler;
-	int** B = SeqAllocate(subsize);
+	char* Recv[4];
+	char DiagSendTable[2][2];
+	char **DiagRecvTable;
+	char** handler;
+	char** B = SeqAllocate(subsize);
 	
-	DiagRecvTable = malloc(2*sizeof(int*));
-	DiagRecvTable[0] = malloc(2*sizeof(int));
-	DiagRecvTable[1] = malloc(2*sizeof(int));
+	DiagRecvTable = malloc(2*sizeof(char*));
+	DiagRecvTable[0] = malloc(2*sizeof(char));
+	DiagRecvTable[1] = malloc(2*sizeof(char));
 	
 	for ( i=0;i<2;i++)
 		for (z=0;z<2;z++)
@@ -58,17 +58,17 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 	for (i = 0; i < 4; i++)
 	{
 		MPI_Type_commit(&Send[i]);
-		Recv[i] = calloc(subsize, sizeof(int));
+		Recv[i] = calloc(subsize, sizeof(char));
 		MPI_Send_init(A[0], 1, Send[i], neighbors[i], TAG, cartcomm, &ReqSend[0][i]);
 		MPI_Send_init(B[0], 1, Send[i], neighbors[i], TAG, cartcomm, &ReqSend[1][i]);
-		MPI_Recv_init(Recv[i], subsize, MPI_INT, neighbors[i], TAG, cartcomm, &ReqRecv[i]);
+		MPI_Recv_init(Recv[i], subsize, MPI_CHAR, neighbors[i], TAG, cartcomm, &ReqRecv[i]);
 	}
 	
-	MPI_Send_init(DiagSendTable[UP], 2, MPI_INT, neighbors[UP], DIAGS, cartcomm, &DiagReq[SEND][UP]);
-	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_INT, neighbors[UP], DIAGS, cartcomm, &DiagReq[RECV][UP]);
+	MPI_Send_init(DiagSendTable[UP], 2, MPI_CHAR, neighbors[UP], DIAGS, cartcomm, &DiagReq[SEND][UP]);
+	MPI_Recv_init(DiagRecvTable[UP], 2, MPI_CHAR, neighbors[UP], DIAGS, cartcomm, &DiagReq[RECV][UP]);
 
-	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_INT, neighbors[DOWN], DIAGS, cartcomm, &DiagReq[SEND][DOWN]);
-	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_INT, neighbors[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
+	MPI_Send_init(DiagSendTable[DOWN], 2, MPI_CHAR, neighbors[DOWN], DIAGS, cartcomm, &DiagReq[SEND][DOWN]);
+	MPI_Recv_init(DiagRecvTable[DOWN], 2, MPI_CHAR, neighbors[DOWN], DIAGS, cartcomm, &DiagReq[RECV][DOWN]);
 
 	MPI_Wait(request, MPI_STATUS_IGNORE);
 	
@@ -93,11 +93,7 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 
 		// Wait to receive Left and Right
 
-		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE);
-
-		int coords[2] ;
-		MPI_Cart_coords( cartcomm,taskid,2,coords); 
-		
+		MPI_Waitall(2, &ReqRecv[2], MPI_STATUSES_IGNORE);		
 
 		DiagSendTable[UP][DIAGRIGHT] = Recv[RIGHT][0];
 		DiagSendTable[UP][DIAGLEFT] = Recv[LEFT][0];
@@ -133,7 +129,7 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 
 			// Compute global residual
 
-			MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_INT, MPI_SUM, cartcomm);
+			MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_CHAR, MPI_SUM, cartcomm);
 
 			if (sum < CONVERGENCE)
 			{
@@ -160,7 +156,7 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 
 	// Send to master
 
-	MPI_Isend(&A[0][0], subsize*subsize, MPI_INT, MASTER, DONE, cartcomm, request);
+	MPI_Isend(&A[0][0], subsize*subsize, MPI_CHAR, MASTER, DONE, cartcomm, request);
 
 	for (i = 0; i < 4; i++)
 	{

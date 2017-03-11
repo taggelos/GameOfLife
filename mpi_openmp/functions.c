@@ -1,12 +1,12 @@
 #include "header.h"
 #include <omp.h>
 
-inline int Populate(int i, int j, int sum, int** A ){
+inline int Populate(int i, int j, int sum, char** A ){
 	return (sum == 3) || (A[i][j] == 1 && sum == 2);
 }
 
 
-void Independent_Update(int** A, int** B, int size)
+void Independent_Update(char** A, char** B, int size)
 {
 	int i, j;
 #ifdef __OMP__
@@ -29,7 +29,7 @@ void Independent_Update(int** A, int** B, int size)
 	}
 }
 
-void Dependent_Update(int** A, int** B, int size, int** Row)
+void Dependent_Update(char** A, char** B, int size, char** Row)
 {
 	int i, j, sum;
 #ifdef __OMP__
@@ -78,7 +78,7 @@ void Dependent_Update(int** A, int** B, int size, int** Row)
 	}
 }
 
-void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row)
+void UpdateDiag(char** A, char** B, int size, char** DiagRecvTable , char** Row)
 {
 	int i, j, sum;
 	
@@ -121,7 +121,7 @@ void UpdateDiag(int** A, int** B, int size, int** DiagRecvTable , int** Row)
 	}	
 }
 
-inline int diffa(int** A, int** B, int size)
+inline int diffa(char** A, char** B, int size)
 {
 	int diff, sum = 0;
 	int i, j;
@@ -143,7 +143,7 @@ inline int diffa(int** A, int** B, int size)
 
 // Standard initdat with rand values without rand generator
 
-inline void inidat(int size, int** u)
+inline void inidat(int size, char** u)
 {
 	int ix, iy;
 
@@ -164,7 +164,7 @@ inline void inidat(int size, int** u)
 
 // Standard prtdat
 
-inline void prtdat(int size, int** u, char *fnam)
+inline void prtdat(int size, char** u, char *fnam)
 {
 	int ix, iy;
 	FILE *fp;
@@ -182,9 +182,9 @@ inline void prtdat(int size, int** u, char *fnam)
 
 // Create two-dimensional array with sequential memory positions
 
-inline int** SeqAllocate(int size) {
-	int* sequence = malloc(size*size*sizeof(int));
-	int** matrix = malloc(size*sizeof(int *));
+inline char** SeqAllocate(int size) {
+	char* sequence = malloc(size*size*sizeof(char));
+	char** matrix = malloc(size*sizeof(char *));
 	int i;
 	for (i = 0; i < size; i++)
 		matrix[i] = &(sequence[i*size]);
@@ -194,7 +194,7 @@ inline int** SeqAllocate(int size) {
 
 // Free two-dimensional array with sequential memory positions
 
-inline void SeqFree(int** memory_ptr)
+inline void SeqFree(char** memory_ptr)
 {
 	free(memory_ptr[0]);
 	free(memory_ptr);

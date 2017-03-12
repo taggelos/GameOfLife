@@ -3,13 +3,14 @@
 #include <sys/time.h>
 #include <math.h>
 
-#define NPROB 425     		// size of problem grid 
-#define GENERATION 1        // generations number
-#define THREAD_NUMBER 1024 	// size of threads should be multiple of warp's size(32)
+//Dimension of problem grid
+#define NPROB 240     	 
+#define GENERATION 100000	
+//Size of threads should be multiple of warp's size(32)     
+#define THREAD_NUMBER 1024 	
 
-/*****************************************************************************
-* subroutine inidat - Initialize Array
-*****************************************************************************/
+//Standard inidat
+
 void inidat(int nx, bool *u)
 {
 	int ix, iy;
@@ -22,9 +23,8 @@ void inidat(int nx, bool *u)
 	}
 }
 
-/**************************************************************************
-* subroutine prtdat - Print the results
-**************************************************************************/
+//Standard prtdat
+
 void prtdat(int nx, bool* u, char *fnam)
 {
 	int ix, iy;
@@ -48,18 +48,19 @@ void prtdat(int nx, bool* u, char *fnam)
 	fclose(fp);
 }
 
-///////////////////////////////////////////////////////////////////////
 
 __global__ void Update(bool *A, bool* B)
 {
-	// Take Indexes
+	//Take Indexes
+
 	int i, j,temp,sum,down,up,left,right;
 	temp = blockIdx.x * blockDim.x + threadIdx.x;
 	i = temp / NPROB;
 	j = temp % NPROB;
 
 
-	// Check for errors and values of edges
+	//Check for errors and values of edges
+
 	if (i < 0 || i > NPROB - 1 || j < 0 || j > NPROB - 1)
 	{
 		return;
@@ -72,7 +73,8 @@ __global__ void Update(bool *A, bool* B)
 
 	sum = A[down*NPROB+j] + A[up*NPROB+j] + A[i*NPROB+left] + A[i*NPROB+right] + A[down*NPROB+left] + A[up*NPROB+left] + A[down*NPROB+right] + A[up*NPROB+right];
 	
-	// Calculate formula
+	//Calculate formula
+
 	B[i*NPROB+j] = ((sum == 3) || (A[i*NPROB+j] == true && sum == 2));
 
 	__syncthreads();
@@ -86,19 +88,20 @@ int main(int argc,char *argv[])
 	bool *d_A,*d_B, *h_A;
 	int it;
 	
-	/* creating two 1d arrays for cuda */
+	//Creating two 1d arrays for cuda 
 
 	cudaMalloc((void**)&d_A,(unsigned long)(NPROB*NPROB*sizeof(bool)));
 	cudaMalloc((void**)&d_B,(unsigned long)(NPROB*NPROB*sizeof(bool)));
 
-	/* creating h_A to initialiaze */
+	//Creating h_A to initialiaze 
 
 	h_A=(bool*)malloc(NPROB*NPROB*sizeof(bool));
 	memset(h_A,0,NPROB*NPROB*sizeof(bool));
 	
-	/* transfering the h_A to device */
+	//Transfering the h_A to device 
 
-	//cudaMemcpy(d_B,h_A,NPROB*NPROB*sizeof(bool),cudaMemcpyHostToDevice));
+	printf("Grid size: %d Generations: %d\n", NPROB, GENERATION);
+	printf("Initializing grid and writing in initial.dat  \n");
 
 	inidat(NPROB,h_A);
 	prtdat(NPROB, h_A, "initial.dat");
@@ -112,7 +115,7 @@ int main(int argc,char *argv[])
 	
 	for (it = 1; it <= GENERATION; it++)
 	{
-		/* swapping between the two arrays */
+		//Swapping between the two arrays
        	
 		Update<<<NPROB*NPROB/THREAD_NUMBER+1,THREAD_NUMBER>>>(d_A,d_B);	
 
@@ -128,10 +131,12 @@ int main(int argc,char *argv[])
 	printf("Finished after %f seconds\n", (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 + (double) (tv2.tv_sec - tv1.tv_sec));
 	printf("Writing final.dat file \n");
 
-	/* Copy results back to host memory */
+	//Copy results back to host memory 
+
 	cudaMemcpy(h_A,d_A, NPROB*NPROB*sizeof(bool), cudaMemcpyDeviceToHost) ;	
 
-	// Print Results
+	//Print Results
+
 	prtdat(NPROB, h_A, "final.dat");
 	
 	

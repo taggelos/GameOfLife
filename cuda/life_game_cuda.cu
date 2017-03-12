@@ -7,7 +7,7 @@
 #define NPROB 240     	 
 #define GENERATION 100000	
 //Size of threads should be multiple of warp's size(32)     
-#define THREAD_NUMBER 1024 	
+#define THREAD_NUMBER 64 	
 
 //Standard inidat
 

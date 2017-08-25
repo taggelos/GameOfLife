@@ -131,7 +131,7 @@ inline Finalize* worker(int* neighbors, MPI_Comm cartcomm, int subsize, int task
 
 			MPI_Allreduce(MPI_IN_PLACE, &sum, 1, MPI_CHAR, MPI_SUM, cartcomm);
 
-			if (sum < CONVERGENCE)
+			if (sum == 0)
 			{
 				printf("%d %d\n", i, sum);
 				break;

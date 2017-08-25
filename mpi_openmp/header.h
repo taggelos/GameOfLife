@@ -37,9 +37,6 @@
 //Reduce every value of REDUCE
 #define REDUCE 10  
 
-//Break generation if succeed CONVERGENCE
-#define CONVERGENCE NPROB*NPROB*0.000001*0.000001
-
 
 typedef struct
 {
